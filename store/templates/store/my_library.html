@@ -1,0 +1,33 @@
+{% extends 'store/base.html' %}
+{% load lang_tags %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4">📚 {% t 'library_title' %}</h2>
+
+    {% if games %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        {% for game in games %}
+        <div class="col">
+            <div class="game-card h-100 d-flex flex-column">
+                {% if game.image %}
+                <img src="{{ game.image.url }}" alt="{{ game.title }}" class="game-thumb">
+                {% else %}
+                <div class="game-thumb game-thumb-empty">🎮</div>
+                {% endif %}
+                <div class="p-3 d-flex flex-column flex-grow-1">
+                    <h5 class="mb-1">{{ game.title }}</h5>
+                    <p class="text-secondary small flex-grow-1">{{ game.description|truncatewords:15 }}</p>
+                    <a href="{% url 'game_detail' game.pk %}" class="btn btn-accent btn-sm w-100">{% t 'open' %}</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        {% t 'library_empty' %} <a href="{% url 'home' %}" class="alert-link">{% t 'go_catalog' %}</a>.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

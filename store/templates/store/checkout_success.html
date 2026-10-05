@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xarid Muvaffaqiyatli | Gaming Store</title>
+    <link rel="stylesheet" href="{% static 'store/css/main.css' %}">
+    <style>
+        .success-box {
+            max-width: 650px;
+            margin: 40px auto;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #10b981;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+            text-align: center;
+        }
+        .key-box {
+            background: #0f172a;
+            border: 1px dashed #38bdf8;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 18px;
+            color: #38bdf8;
+            margin-top: 8px;
+            letter-spacing: 2px;
+        }
+        .item-card {
+            background: #0f172a;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><a href="{% url 'home' %}" style="color: inherit; text-decoration: none;">🎮 GAMING STORE</a></h1>
+    </header>
+
+    <div class="container">
+        <div class="success-box">
+            <h2 style="color: #10b981; margin-bottom: 10px;">🎉 Xarid muvaffaqiyatli amalga oshirildi!</h2>
+            <p style="color: #94a3b8;">Buyurtma raqami: #{{ order.id }} | Jami: ${{ order.total_price }}</p>
+
+            <h3 style="color: #f8fafc; margin-top: 25px; text-align: left;">Sizning litsenziya kalitlaringiz:</h3>
+            
+            {% for item in order.items.all %}
+                <div class="item-card">
+                    <strong style="color: #fff; font-size: 16px;">{{ item.game.title }}</strong>
+                    <div class="key-box">{{ item.activation_key }}</div>
+                </div>
+            {% endfor %}
+
+            <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                <a href="{% url 'library' %}" class="btn-buy" style="background: #10b981;">Kutubxonamga o'tish</a>
+                <a href="{% url 'home' %}" class="btn-buy">Bosh sahifa</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

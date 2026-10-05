@@ -1,0 +1,91 @@
+{% extends 'store/base.html' %}
+{% load lang_tags %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <h1 class="display-5 fw-bold mb-2">{% t 'hero_title' %}</h1>
+        <p class="lead mb-0 text-secondary">{% t 'hero_sub' %}</p>
+    </div>
+</section>
+
+<div class="container my-4">
+
+    <form method="get" class="filter-bar mb-4">
+        <div class="row g-2">
+            <div class="col-12 col-md-4">
+                <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="{% t 'search_placeholder' %}">
+            </div>
+            <div class="col-6 col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">{% t 'all_categories' %}</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <select name="sort" class="form-select">
+                    <option value="">{% t 'sort_default' %}</option>
+                    <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>{% t 'sort_price_asc' %}</option>
+                    <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>{% t 'sort_price_desc' %}</option>
+                    <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{% t 'sort_newest' %}</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-accent w-100">{% t 'search_btn' %}</button>
+            </div>
+        </div>
+    </form>
+
+    {% if games %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        {% for game in games %}
+        <div class="col">
+            <div class="game-card h-100 d-flex flex-column position-relative">
+                {% if game.has_discount %}
+                <span class="badge bg-danger position-absolute m-2" style="z-index: 2;">-{{ game.discount_percent }}% {% t 'off' %}</span>
+                {% endif %}
+                {% if game.image %}
+                <img src="{{ game.image.url }}" alt="{{ game.title }}" class="game-thumb">
+                {% else %}
+                <div class="game-thumb game-thumb-empty">🎮</div>
+                {% endif %}
+                <div class="p-3 d-flex flex-column flex-grow-1">
+                    {% if game.category %}
+                    <span class="badge badge-cat align-self-start mb-2">{{ game.category.name }}</span>
+                    {% endif %}
+                    <h5 class="mb-1">{{ game.title }}</h5>
+                    {% if game.review_count %}
+                    <div class="small text-warning mb-1">{{ game.stars }} <span class="text-secondary">{{ game.average_rating }} ({{ game.review_count }})</span></div>
+                    {% endif %}
+                    <p class="text-secondary small flex-grow-1">{{ game.description|truncatewords:15 }}</p>
+                    <div class="mb-3">
+                        {% if game.has_discount %}
+                        <span class="text-decoration-line-through text-secondary small">${{ game.price|floatformat:"-2" }}</span>
+                        <span class="price ms-1">${{ game.final_price|floatformat:"-2" }}</span>
+                        {% else %}
+                        <span class="price">${{ game.price|floatformat:"-2" }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'game_detail' game.pk %}" class="btn btn-outline-light btn-sm flex-fill">{% t 'details' %}</a>
+                        <a href="{% url 'buy_now' game.pk %}" class="btn btn-accent btn-sm flex-fill">{% t 'buy_now' %}</a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'toggle_wishlist' game.pk %}" class="btn btn-outline-light btn-sm px-2">
+                            {% if game.pk in wishlist_ids %}❤️{% else %}🤍{% endif %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        {% t 'no_games' %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

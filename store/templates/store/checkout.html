@@ -1,0 +1,89 @@
+{% extends 'store/base.html' %}
+{% load lang_tags %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 720px;">
+    <h2 class="mb-4">{% t 'checkout_title' %}</h2>
+
+    <div class="game-card p-3 mb-3">
+        {% for item in items %}
+        <div class="d-flex align-items-center gap-3 py-2">
+            {% if item.game.image %}
+            <img src="{{ item.game.image.url }}" alt="{{ item.game.title }}" style="width: 96px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px;">
+            {% else %}
+            <div class="game-thumb-empty" style="width: 96px; aspect-ratio: 16 / 9; border-radius: 8px; font-size: 1.5rem;">🎮</div>
+            {% endif %}
+            <div class="flex-grow-1">
+                <div class="fw-semibold">{{ item.game.title }}</div>
+                {% if item.quantity > 1 %}<div class="text-secondary small">× {{ item.quantity }}</div>{% endif %}
+            </div>
+            <div class="price fs-6">${{ item.game.final_price|floatformat:"-2" }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <span class="fs-5">{% t 'total' %}</span>
+        <span class="price fs-4">${{ total_price|floatformat:"-2" }}</span>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="{% url 'home' %}" class="btn btn-outline-light">{% t 'back_home' %}</a>
+        <button type="button" class="btn btn-accent flex-fill" onclick="openPaymentModal()">{% t 'confirm_purchase' %}</button>
+    </div>
+
+    <form method="post" id="checkout-form" class="d-none">
+        {% csrf_token %}
+    </form>
+</div>
+
+<div class="modal-overlay" id="payment-modal">
+    <div class="modal-content">
+        <button type="button" class="close-modal" onclick="closePaymentModal()">&times;</button>
+        <div class="modal-title">💳 {% t 'pay_amount' %}</div>
+        <div class="text-warning small mb-3">⚠️ Demo rejim — haqiqiy pul yechilmaydi</div>
+
+        <div class="card-preview">
+            <div class="card-chip"></div>
+            <div>
+                <div class="card-number-display" id="card-num-preview">•••• •••• •••• ••••</div>
+                <div class="card-details-display">
+                    <div>
+                        <span class="label">{% t 'cardholder' %}</span>
+                        <span id="card-holder-preview">YOUR NAME</span>
+                    </div>
+                    <div>
+                        <span class="label">{% t 'expiry' %}</span>
+                        <span id="card-expiry-preview">MM/YY</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form onsubmit="processPayment(event)">
+            <div class="pay-field">
+                <label>{% t 'card_number' %}</label>
+                <input type="text" inputmode="numeric" class="form-input" maxlength="19" placeholder="0000 0000 0000 0000" oninput="formatCardNumber(this)" required>
+            </div>
+            <div class="pay-field">
+                <label>{% t 'cardholder' %}</label>
+                <input type="text" class="form-input" placeholder="JOHN DOE" oninput="updateHolderPreview(this)" required style="text-transform: uppercase;">
+            </div>
+            <div class="form-row">
+                <div class="pay-field">
+                    <label>{% t 'expiry' %}</label>
+                    <input type="text" inputmode="numeric" class="form-input" maxlength="5" placeholder="MM/YY" oninput="formatExpiry(this)" required>
+                </div>
+                <div class="pay-field">
+                    <label>{% t 'cvv' %}</label>
+                    <input type="text" inputmode="numeric" class="form-input" maxlength="3" placeholder="123" oninput="formatCvv(this)" required>
+                </div>
+            </div>
+            <button type="submit" id="pay-submit-btn" data-processing-text="{% t 'processing' %}" class="btn-pay-submit">
+                {% t 'pay_amount' %} — ${{ total_price|floatformat:"-2" }}
+            </button>
+            <div class="secure-note">🔒 Secure demo payment</div>
+        </form>
+    </div>
+</div>
+{% endblock %}

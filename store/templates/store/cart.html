@@ -1,0 +1,154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savat - Gaming Store</title>
+    <link rel="stylesheet" href="{% static 'store/css/main.css' %}">
+    <style>
+        .cart-wrapper {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border: 1px solid #334155;
+        }
+        .cart-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-bottom: 1px solid #334155;
+        }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        .item-detail {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .item-detail img {
+            width: 90px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .item-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #f8fafc;
+        }
+        .item-qty {
+            background: #0f172a;
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #94a3b8;
+            font-size: 14px;
+            border: 1px solid #334155;
+        }
+        .item-price {
+            font-size: 20px;
+            color: #4ade80;
+            font-weight: bold;
+        }
+        .cart-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" style="max-width: 900px;">
+        <a href="{% url 'home' %}" class="btn-buy" style="background: transparent; color: #38bdf8; padding: 0; margin-bottom: 25px; display: inline-block;">← Xaridni davom ettirish</a>
+
+        <h1 style="margin-bottom: 25px; font-size: 28px;">🛒 Sizning Savatingiz</h1>
+
+        {% if cart_items %}
+            <div class="cart-wrapper">
+                {% for item in cart_items %}
+                    <div class="cart-item">
+                        <div class="item-detail">
+                            {% if item.game.image %}
+                                <img src="{{ item.game.image.url }}" alt="{{ item.game.title }}">
+                            {% else %}
+                                <img src="https://via.placeholder.com/90x60?text=No+Image" alt="No image">
+                            {% endif %}
+                            <div>
+                                <div class="item-title">{{ item.game.title }}</div>
+                                <div style="color: #94a3b8; font-size: 14px; margin-top: 4px;">Donasi: ${{ item.game.price }}</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 25px;">
+                            <span class="item-qty">{{ item.quantity }} ta</span>
+                            <span class="item-price">${{ item.item_total }}</span>
+                            <a href="{% url 'remove_from_cart' item.game.pk %}" style="color: #f87171; text-decoration: none; font-size: 20px; font-weight: bold; padding: 5px 10px;" title="O'chirish">✕</a>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div class="cart-footer">
+                    <div>
+                        <div style="color: #94a3b8; font-size: 14px;">Jami to'lanadigan summa:</div>
+                        <div style="font-size: 32px; color: #4ade80; font-weight: bold;">${{ total_price }}</div>
+                    </div>
+
+                    <button onclick="openPaymentModal('Savatdagi o\'yinlar', '{{ total_price }}')" class="btn-buy" style="background: #4ade80; color: #0f172a; padding: 14px 28px; font-size: 16px; border: none; border-radius: 8px;">
+                        Karta orqali to'lash 💳
+                    </button>
+                </div>
+            </div>
+        {% else %}
+            <div class="cart-wrapper" style="text-align: center; padding: 60px 20px;">
+                <p style="color: #94a3b8; font-size: 20px; margin-bottom: 20px;">Savatingiz hozircha bo'sh 😕</p>
+                <a href="{% url 'home' %}" class="btn-buy" style="display: inline-block;">O'yinlarni ko'rish</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Plastik Karta To'lov Modal Oynasi -->
+    <div id="payment-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closePaymentModal()">&times;</span>
+            <h2 style="color: #f8fafc; font-size: 20px;">Tezkor Xarid</h2>
+            <p style="color: #94a3b8; font-size: 14px;"><span id="modal-game-title"></span> - <strong id="modal-game-price" style="color:#4ade80;"></strong></p>
+
+            <div class="card-preview">
+                <div style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Gaming Pay Card</div>
+                <div id="card-num-preview" class="card-number-display">•••• •••• •••• ••••</div>
+                <div class="card-details-display">
+                    <span>UzCard / Humo / Visa</span>
+                    <span>12/28</span>
+                </div>
+            </div>
+
+            <form onsubmit="processPayment(event)">
+                <div class="form-group">
+                    <label>Karta Raqami</label>
+                    <input type="text" class="form-input" placeholder="8600 0000 0000 0000" maxlength="19" oninput="formatCardNumber(this)" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Amal qilish muddati</label>
+                        <input type="text" class="form-input" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)" required>
+                    </div>
+                    <div class="form-group" style="width: 100px;">
+                        <label>CVC / CVC2</label>
+                        <input type="password" class="form-input" placeholder="•••" maxlength="3" required>
+                    </div>
+                </div>
+                <button type="submit" id="pay-submit-btn" class="btn-pay">Hozir toʻlash</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{% static 'store/js/main.js' %}"></script>
+</body>
+</html>
